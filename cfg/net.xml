@@ -37,25 +37,25 @@
 
     <location netOffset="0,0" convBoundary="-6900.00,72.20,5968.68,83.40" origBoundary="-10000000000.00,-10000000000.00,10000000000.00,10000000000.00" projParameter="!"/>
 
-    <edge id="E0" from="J1" to="J3" priority="-1" length="450.00">
+    <edge id="E0" from="J1" to="J3" priority="1" length="450.00">
         <!-- <lane id="E0_0" index="0" speed="44.33" length="450.00" shape="-6900.00,77.00 -6550.32,77.00"/>
         <lane id="E0_1" index="1" speed="44.33" length="450.00" shape="-6900.00,80.20 -6550.32,80.20"/>
         <lane id="E0_2" index="2" speed="44.33" length="450.00" shape="-6900.00,83.40 -6550.32,83.40"/> -->
-        <lane id="E0_0" index="0" speed="44.33" length="450.00" shape="-6550.32,83.40 -6900.00,83.40"/>
-        <lane id="E0_1" index="1" speed="44.33" length="450.00" shape="-6550.32,80.20 -6900.00,80.20"/>
-        <lane id="E0_2" index="2" speed="44.33" length="450.00" shape="-6550.32,77.00 -6900.00,77.00"/>
+        <lane id="E0_0" index="0" speed="80" length="450.00" shape="-6550.32,83.40 -6900.00,83.40"/>
+        <lane id="E0_1" index="1" speed="80" length="450.00" shape="-6550.32,80.20 -6900.00,80.20"/>
+        <lane id="E0_2" index="2" speed="80" length="450.00" shape="-6550.32,77.00 -6900.00,77.00"/>
     </edge>
 
-    <edge id="E1" from="J4" to="J6" priority="1" length="450.00">
-        <lane id="E1_0" index="0" speed="44.33" length="450.00" shape="-6550.32,67.10 -6900.00,67.10"/>
-        <lane id="E1_1" index="1" speed="44.33" length="450.00" shape="-6550.32,70.30 -6900.00,70.30"/>
-        <lane id="E1_2" index="2" speed="44.33" length="450.00" shape="-6550.32,73.50 -6900.00,73.50"/>
+    <edge id="E1" from="J6" to="J4" priority="1" length="450.00">
+        <lane id="E1_0" index="0" speed="80" length="450.00" shape="-6900.32,73.50 -6550.00,73.50"/>
+        <lane id="E1_1" index="1" speed="80" length="450.00" shape="-6900.32,70.30 -6550.00,70.30"/>
+        <lane id="E1_2" index="2" speed="80" length="450.00" shape="-6900.32,67.10 -6550.00,67.10"/>
     </edge>
 
     <junction id="J1" type="dead_end" x="-6550.32" y="83.40" incLanes="E0_0 E0_1 E0_2" intLanes="" shape="-6550.32,77.00 -6550.32,83.40"/>
     <junction id="J3" type="dead_end" x="-6900.00" y="83.40" incLanes="E0_0 E0_1 E0_2" intLanes="" shape="-6900.00,77.00 -6900.00,83.40"/>
 
-    <junction id="J4" type="dead_end" x="-6550.32" y="73.50" incLanes="E1_0 E1_1 E1_2" intLanes="" shape="-6550.32,67.10 -6550.32,73.50"/>
-    <junction id="J6" type="dead_end" x="-6550.32" y="73.50" incLanes="E1_0 E1_1 E1_2" intLanes="" shape="-6900.00,67.10 -6900.00,73.50"/>
+    <junction id="J4" type="dead_end" x="-6550.00" y="73.50" incLanes="E1_0 E1_1 E1_2" intLanes="" shape="-6550.00,67.10 -6550.00,73.50"/>
+    <junction id="J6" type="dead_end" x="-6900.32" y="73.50" incLanes="E1_0 E1_1 E1_2" intLanes="" shape="-6900.32,67.10 -6900.32,73.50"/>
 
 </net>

@@ -32,7 +32,7 @@ from utils import (
 )
 
 
-TOTAL_TIME = 22539*4+2600*4
+TOTAL_TIME = 22539*8+2600*8
 
 END_EDGE_ID = "E7"
 
@@ -76,7 +76,17 @@ def getlaneId(laneId, directions):
     if directions == 1:
         return str(laneId - 1)
     elif directions == 2:
-        return str(laneId - 1) ########## err
+        return str(laneId - 4) 
+    
+# def build_vehicletype(tp, id, length):
+#     traci.vehicletype.add(
+#         typeID = str(tp) + str(id),
+#         accel = 1.0,
+#         decel = 2.0,
+#         length = length,
+#         maxSpeed = 80.0,
+#         vClass = tp
+#     )
 
 def read_trajectory_tracking_data(tracksMeta_path, tracks_path):
     frames_data = {}
@@ -87,39 +97,42 @@ def read_trajectory_tracking_data(tracksMeta_path, tracks_path):
             current_id = int(row['id'])
             if current_id not in tracks:
                 tracks[current_id] = {
-                    'carid': str(row['class']) + str(current_id),
+                    'carid': str(row['class']).lower() + str(current_id),
                     'initialFrame': int(row['initialFrame']),
                     'finalFrame' : int(row['finalFrame']),
                     'direction': int(row['drivingDirection']), # 1 is right to left, 2 is left to right
                 }
+                # build_vehicletype(str(row['class']), str(current_id), float(row['height']))
                 
     with open(tracks_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             current_frame = int(row['frame'])
+            # if tracks[int(row['id'])]['direction'] == 2:
+            #     print(getlaneId(int(row['laneId']), tracks[int(row['id'])]['direction']))
+            #     continue
             if current_frame not in frames_data:
                     frames_data[current_frame] = []
-
             if current_frame == tracks[int(row['id'])]['initialFrame']:
                 frames_data[current_frame].append({
                     'first_appear': True,
                     'x': float(row['x']),
-                    'carid': tracks[int(row['id'])],
-                    'xVelocity' : float(row['xVelocity']),
-                    'yVelocity' : float(row['yVelocity']),
+                    'carid': tracks[int(row['id'])]['carid'],
+                    'xVelocity' : abs(float(row['xVelocity'])),
+                    'yVelocity' : abs(float(row['yVelocity'])),
                     'direction' : int(tracks[int(row['id'])]['direction']),
-                    'laneId' : getlaneId(int(row['id']), tracks[int(row['id'])]['direction'])
+                    'laneId' : getlaneId(int(row['laneId']), tracks[int(row['id'])]['direction'])
                 })
             else:
                 frames_data[current_frame].append({
                     'first_appear': False,
-                    'carid': tracks[int(row['id'])],
-                    'xVelocity' : float(row['xVelocity']),
-                    'yVelocity' : float(row['yVelocity']),
+                    'carid': tracks[int(row['id'])]['carid'],
+                    'xVelocity' : abs(float(row['xVelocity'])),
+                    'yVelocity' : abs(float(row['yVelocity'])),
                     'direction' : tracks[int(row['id'])]['direction'],
-                    'laneId' : getlaneId(int(row['id']), tracks[int(row['id'])]['direction'])
+                    'laneId' : getlaneId(int(row['laneId']), tracks[int(row['id'])]['direction'])
                 })
-                     
+
     return frames_data
 
 
@@ -150,25 +163,36 @@ def main():
     while times < TOTAL_TIME:
         traci.simulationStep()
         
-        if times > START_STEP and times % 4 ==0:
+        if times > START_STEP and times % 8 ==0:
             if step in frames_data:
                 for data in frames_data[step]:
                     try:
                         if data['first_appear']:
-                            traci.vehicle.add(
-                                vehID=str(data['carid']),
-                                routeID="platoon_route",
-                                typeID=str(data['carid']),
-                                departSpeed=data['xVelocity'],
-                                departPos=str(450-float(data['x'])),
-                                departLane=data['laneId'],
-                            )
-                            print(data['laneId'])
+                            if int(data['direction']) == 2:
+                                traci.vehicle.add(
+                                    vehID=str(data['carid']),
+                                    routeID="left_to_right",
+                                    typeID=str(data['carid']),
+                                    departSpeed=data['xVelocity'],
+                                    departPos=str(float(data['x'] - 450)),
+                                    departLane=data['laneId']
+                                )
+                            else:
+                                traci.vehicle.add(
+                                    vehID=str(data['carid']),
+                                    routeID="right_to_left",
+                                    typeID=str(data['carid']),
+                                    departSpeed=data['xVelocity'],
+                                    departPos=str(450 - float(data['x'])),
+                                    departLane=data['laneId']
+                                )
                         else:
-                            traci.vehicle.setSpeed(str(data['carid']), data['xVelocity'])
+                            if str(data['carid']) in traci.vehicle.getIDList():
+                                traci.vehicle.setSpeed(str(data['carid']), data['xVelocity'])
                     except Exception as e:
                         pass
             step += 1
+        time.sleep(0.005)
         times+=1
     traci.close()
 
