@@ -91,7 +91,6 @@ class Vehicles:
         vTypeDist_truck = ET.Element("vTypeDistribution", {"id": "truck"})
         
         for vtype in self.cars:
-            print(vtype.make_data_frame())
             ET.SubElement(vTypeDist_car, "vType", vtype.make_data_frame())
         root.append(vTypeDist_car)
 
@@ -110,7 +109,7 @@ class Vehicles:
 
 
 if __name__ == '__main__':
-    vehicles_obj = Vehicles(tracksMeta_path = "../data/02_tracksMeta.csv", save_path = "../cfg/vehicletype.add.xml")
+    vehicles_obj = Vehicles(tracksMeta_path = "../data/29_tracksMeta.csv", save_path = "../cfg/vehicletype.add.xml")
     vehicles_obj.get_car_info()
     vehicles_obj.create_vehicle_type_xml()
 

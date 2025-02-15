@@ -1,70 +1,17 @@
-from math import sqrt
-import random
-import os
-import sys
 import time
-import re
 import csv
 from utils import check_sumo_env
 import shutil
 
 check_sumo_env()
 import traci
-from traci import StepListener, constants as tc, vehicle
-from plexe import (
-    Plexe,
-    ACC,
-    CACC,
-    GEAR,
-    RPM,
-    CONSENSUS,
-    PLOEG,
-    ENGINE_MODEL_REALISTIC,
-    FAKED_CACC,
-)
-from utils import (
-    start_sumo,
-    running,
-    add_platooning_vehicle,
-    add_vehicle,
-    communicate,
-    get_distance,
-)
+from utils import start_sumo
 
-
-TOTAL_TIME = 22539*8+2600*8
-
-END_EDGE_ID = "E7"
+time_block = 6
+TOTAL_TIME = 22539 * time_block + 2600 * time_block
 
 GUI = True
-
-# inter-vehicle distance
-
 START_STEP = 0
-# lane_number latoon insert
-CHECK_ALL = 0b01111  # SpeedMode
-LAN_CHANGE_MODE = 0b011001011000
-#                   0123456789
-ptype_list = []
-
-# def init_csv_file(path):
-#     f = open(path, "w")
-#     writer = csv.writer(f)
-#     writer.writerow(
-#         [
-#             "id",
-#             "frame",
-#             "idv_type",
-#             "v",
-#             "acc",
-#             "x",
-#             "lane_index",
-#             "vehicle_sum",
-#             "p_vehicle_sum",
-#         ]
-#     )
-#     return f, writer
-
 
 def gene_config():
     copy_cfg = (
@@ -77,16 +24,6 @@ def getlaneId(laneId, directions):
         return str(laneId - 1)
     elif directions == 2:
         return str(laneId - 4) 
-    
-# def build_vehicletype(tp, id, length):
-#     traci.vehicletype.add(
-#         typeID = str(tp) + str(id),
-#         accel = 1.0,
-#         decel = 2.0,
-#         length = length,
-#         maxSpeed = 80.0,
-#         vClass = tp
-#     )
 
 def read_trajectory_tracking_data(tracksMeta_path, tracks_path):
     frames_data = {}
@@ -101,21 +38,19 @@ def read_trajectory_tracking_data(tracksMeta_path, tracks_path):
                     'initialFrame': int(row['initialFrame']),
                     'finalFrame' : int(row['finalFrame']),
                     'direction': int(row['drivingDirection']), # 1 is right to left, 2 is left to right
+                    'numLaneChanges': int(row['numLaneChanges'])
                 }
-                # build_vehicletype(str(row['class']), str(current_id), float(row['height']))
                 
     with open(tracks_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             current_frame = int(row['frame'])
-            # if tracks[int(row['id'])]['direction'] == 2:
-            #     print(getlaneId(int(row['laneId']), tracks[int(row['id'])]['direction']))
-            #     continue
             if current_frame not in frames_data:
                     frames_data[current_frame] = []
             if current_frame == tracks[int(row['id'])]['initialFrame']:
                 frames_data[current_frame].append({
                     'first_appear': True,
+                    'change_lane_duration' : 0,
                     'x': float(row['x']),
                     'carid': tracks[int(row['id'])]['carid'],
                     'xVelocity' : abs(float(row['xVelocity'])),
@@ -128,33 +63,15 @@ def read_trajectory_tracking_data(tracksMeta_path, tracks_path):
                     'first_appear': False,
                     'carid': tracks[int(row['id'])]['carid'],
                     'xVelocity' : abs(float(row['xVelocity'])),
-                    'yVelocity' : abs(float(row['yVelocity'])),
-                    'direction' : tracks[int(row['id'])]['direction'],
-                    'laneId' : getlaneId(int(row['laneId']), tracks[int(row['id'])]['direction'])
+                    # 'yVelocity' : abs(float(row['yVelocity'])),
+                    # 'direction' : tracks[int(row['id'])]['direction'],
+                    # 'laneId' : getlaneId(int(row['laneId']), tracks[int(row['id'])]['direction'])
                 })
 
     return frames_data
 
-
-
-# def has_vehicle_entered(step, vehicles_to_enter):
-#     return vehicles_to_enter.get(step) is not None
-
-# def aggregate_vehicles(tracks_meta):
-#     vehicles_to_enter = {}
-#     for vid, data in tracks_meta.items():
-#         if data.get('found'):
-#             data['id'] = vid
-#             frame = data['initialFrame']
-#             if frame in vehicles_to_enter:
-#                 vehicles_to_enter[frame].append(data)
-#             else:
-#                 vehicles_to_enter[frame] = [data]
-#     return vehicles_to_enter
-
-
 def main():
-    frames_data = read_trajectory_tracking_data("../data/02_tracksMeta.csv", "../data/02_tracks.csv")
+    frames_data = read_trajectory_tracking_data("../data/29_tracksMeta.csv", "../data/29_tracks.csv")
     cfg_file = gene_config()
     start_sumo(cfg_file + "/freeway.sumo.cfg", False, gui=GUI)
     
@@ -162,8 +79,7 @@ def main():
     
     while times < TOTAL_TIME:
         traci.simulationStep()
-        
-        if times > START_STEP and times % 8 ==0:
+        if times > START_STEP and times % time_block == 0:
             if step in frames_data:
                 for data in frames_data[step]:
                     try:
@@ -192,7 +108,7 @@ def main():
                     except Exception as e:
                         pass
             step += 1
-        time.sleep(0.005)
+        time.sleep(0.00001)
         times+=1
     traci.close()
 
